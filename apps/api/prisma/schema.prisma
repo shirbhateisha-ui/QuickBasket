@@ -1,0 +1,261 @@
+// QuickBasket — Prisma schema
+// DB: PostgreSQL · Auth: phone + password (argon2) · Payments: Cash on Delivery only
+// See docs/database-design.md and docs/architecture.md for rationale.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+enum UserRole {
+  CUSTOMER
+  STAFF // interim: advances order status until an admin portal exists
+}
+
+enum OrderStatus {
+  PLACED
+  CONFIRMED
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD // only method for this release; ONLINE added in future scope
+}
+
+enum PaymentStatus {
+  PENDING
+  COLLECTED
+  REFUNDED
+}
+
+enum CouponType {
+  PERCENT // value = % off (with optional maxDiscount cap)
+  FLAT // value = flat amount off
+}
+
+// ----------------------------------------------------------------------------
+// Users & auth
+// ----------------------------------------------------------------------------
+
+model User {
+  id           String         @id @default(cuid())
+  phone        String         @unique
+  name         String?
+  passwordHash String
+  role         UserRole       @default(CUSTOMER)
+  pushToken    String? // Expo/FCM push token for order notifications
+  addresses    Address[]
+  orders       Order[]
+  refreshTokens RefreshToken[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("users")
+}
+
+// Stores HASHED refresh tokens to support rotation + revocation.
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String // "Home", "Work"
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pincode   String
+  lat       Float?
+  lng       Float?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ----------------------------------------------------------------------------
+// Catalog
+// ----------------------------------------------------------------------------
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  image     String
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("categories")
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String?
+  price       Float // selling price
+  mrp         Float // original price, for discount display
+  stock       Int         @default(0)
+  unit        String // "500g", "1L", "dozen"
+  images      String[]
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  isActive    Boolean     @default(true)
+  isFeatured  Boolean     @default(false)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([categoryId])
+  @@index([name])
+  @@map("products")
+}
+
+// ----------------------------------------------------------------------------
+// Coupons, delivery slots, promotions
+// ----------------------------------------------------------------------------
+
+model Coupon {
+  id          String     @id @default(cuid())
+  code        String     @unique
+  type        CouponType
+  value       Float
+  minOrder    Float      @default(0)
+  maxDiscount Float? // cap for PERCENT coupons
+  startsAt    DateTime
+  endsAt      DateTime
+  usageLimit  Int? // null = unlimited
+  usedCount   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("coupons")
+}
+
+model DeliverySlot {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date
+  startTime   String // "09:00"
+  endTime     String // "11:00"
+  capacity    Int      @default(20)
+  bookedCount Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([date, startTime, endTime])
+  @@index([date])
+  @@map("delivery_slots")
+}
+
+model Promotion {
+  id        String   @id @default(cuid())
+  title     String
+  image     String
+  link      String? // deep link / category slug
+  startsAt  DateTime
+  endsAt    DateTime
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("promotions")
+}
+
+// Single-row config (single-store). Drives the per-kilometer delivery fee.
+// deliveryFee = clamp(baseFee + perKmFee * distanceKm, minFee, maxFee?)
+//   - distanceKm = haversine(store -> delivery address), rounded per `roundUpKm`
+//   - if subtotal >= freeAboveSubtotal  -> deliveryFee = 0
+//   - if distanceKm > maxDistanceKm     -> address is out of serviceable range
+model DeliveryConfig {
+  id               String   @id @default("default") // enforce one row
+  storeLat         Float // origin for distance calc
+  storeLng         Float
+  baseFee          Float    @default(0) // flat component
+  perKmFee         Float    @default(0) // charged per km
+  minFee           Float    @default(0) // floor after base + per-km
+  maxFee           Float? // optional cap
+  freeAboveSubtotal Float?  // free delivery when cart subtotal >= this
+  maxDistanceKm    Float    @default(10) // serviceable radius
+  roundUpKm        Boolean  @default(true) // ceil distance to whole km before charging
+  updatedAt        DateTime @updatedAt
+
+  @@map("delivery_config")
+}
+
+// ----------------------------------------------------------------------------
+// Orders
+// ----------------------------------------------------------------------------
+
+model Order {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+  status        OrderStatus   @default(PLACED)
+  paymentMethod PaymentMethod @default(COD)
+  paymentStatus PaymentStatus @default(PENDING)
+
+  subtotal    Float
+  discount    Float   @default(0)
+  distanceKm  Float   @default(0) // store -> delivery address, drives deliveryFee
+  deliveryFee Float   @default(0) // computed per-km via DeliveryConfig at checkout
+  total       Float
+  couponCode  String?
+
+  // Immutable snapshots so historical orders never change if the source record does.
+  address Json // { label, line1, line2, city, state, pincode, lat, lng }
+  slot    Json // { date, from, to }
+
+  placedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  // Snapshot product fields at purchase time.
+  name  String
+  unit  String
+  price Float
+  qty   Int
+
+  @@index([orderId])
+  @@map("order_items")
+}
