@@ -28,16 +28,15 @@ OTP and online payments are future scope.
 - [ ] Decision sign-off: password auth + COD for launch.
 
 ### Tasks
-- [ ] `[INFRA]` Create accounts: Expo/EAS, Postgres host (Railway/Supabase), Redis (Upstash), Cloudflare R2, Sentry, FCM.
-- [ ] `[INFRA]` Provision **dev** PostgreSQL + Redis; capture connection strings in a secrets store / `.env`.
-- [ ] `[INFRA]` Add `.nvmrc` (Node 24 LTS); confirm pnpm as the package manager.
-- [ ] `[INFRA]` Confirm `.gitignore` covers `node_modules/`, `.env*`, build output, `.claude/`.
-- [ ] `[INFRA]` Set up branch protection on `main` (PR + passing CI to merge).
+- [x] `[INFRA]` Create **GitHub** account/repo. *(Other accounts moved to the phase that first needs them — Expo→P1, Redis+R2→P2, FCM→P4, Sentry→P5.)*
+- [x] `[INFRA]` Provision **dev** PostgreSQL (local Docker); capture connection string in `.env`. *(dev Redis moved to Phase 2.)*
+- [x] `[INFRA]` Add `.nvmrc` (Node 24 LTS); confirm pnpm as the package manager.
+- [x] `[INFRA]` Confirm `.gitignore` covers `node_modules/`, `.env*`, build output, `.claude/`.
 
 ### End-Goal Checklist
-- [ ] All third-party accounts exist and credentials are stored securely.
-- [ ] Dev Postgres + Redis reachable from a local machine.
-- [ ] Repo has `.nvmrc`, `.gitignore`, and branch protection in place.
+- [x] GitHub + dev Postgres ready; credentials stored securely (other accounts deferred to their phases).
+- [x] Dev Postgres reachable from a local machine (migrated + seeded).
+- [x] Repo has `.nvmrc` and `.gitignore` in place.
 
 ---
 
@@ -50,6 +49,9 @@ OTP and online payments are future scope.
 - [ ] Dev DB connection string available.
 
 ### Tasks
+**Accounts**
+- [x] `[INFRA]` **Expo / EAS** account created + `eas login` done in terminal.
+
 **Monorepo & tooling**
 - [ ] `[INFRA]` Turborepo + pnpm workspaces; create `apps/{mobile,api}` + `packages/{ui,store,types,utils}`.
 - [ ] `[INFRA]` Root `turbo.json` pipelines (dev/build/lint/test); shared base `tsconfig.json`.
@@ -90,6 +92,10 @@ OTP and online payments are future scope.
 - [ ] Cloudflare R2 bucket ready for product images.
 
 ### Tasks
+**Accounts & infra**
+- [ ] `[INFRA]` Provision **dev Redis** (local Docker `redis:7` or Upstash); capture `REDIS_URL`.
+- [ ] `[INFRA]` Create **Cloudflare R2** bucket + API token; capture R2 creds in `.env`.
+
 **API**
 - [ ] `[BE]` Prisma `Category` + `Product` models; migration.
 - [ ] `[BE]` Seed script: ~6 categories, 100+ products with image URLs (sample images uploaded to R2).
@@ -163,6 +169,7 @@ OTP and online payments are future scope.
 - [ ] FCM credentials + Expo push configured; physical device available for push testing.
 
 ### Tasks
+- [ ] `[INFRA]` Create **Firebase / FCM** project + Android app; download `google-services.json`; upload FCM V1 key to Expo.
 - [ ] `[BE]` Order state-machine service with valid-transition guards (PLACED→CONFIRMED→PACKED→OUT_FOR_DELIVERY→DELIVERED / CANCELLED).
 - [ ] `[BE]` Internal status-transition endpoint (interim staff control; protected).
 - [ ] `[BE]` Socket.io server; emit `order:status` to the order's user room.
@@ -192,6 +199,7 @@ OTP and online payments are future scope.
 - [ ] `[BE]` `Promotion` model with start/end scheduling; `GET /promotions` drives banners.
 - [ ] `[MOB]` Empty states, error boundaries, skeleton loaders across screens.
 - [ ] `[MOB]` Static "Cash on Delivery" PaymentMethods screen.
+- [ ] `[INFRA]` Create **Sentry** account + `quickbasket-api` / `quickbasket-mobile` projects; capture DSNs + auth token.
 - [ ] `[INFRA]` Sentry on mobile + API.
 - [ ] `[INFRA]` GitHub Actions CI: lint + test + build on PR.
 - [ ] `[INFRA]` EAS Build + EAS Submit (App Store / Play); EAS Update for OTA; web deploy (Vercel/Cloudflare Pages).

@@ -26,29 +26,27 @@
 - [x] `[INFRA]` Install **Docker Desktop** (optional — for local Postgres) — v29.5.3
 - [x] `[INFRA]` On Windows: note **VS Build Tools** may be needed for native `argon2` compile — `argon2` built & seed ran OK
 
-### Third-party accounts
+### Accounts needed now
 
 Create accounts and store credentials securely (password manager or host secret store — never commit):
 
-- [x] `[INFRA]` **GitHub** — repo exists (`shirbhateisha-ui/QuickBasket`); branch protection still pending
-- [ ] `[INFRA]` **Expo / EAS** — `expo.dev` account for builds and OTA
-- [x] `[INFRA]` **PostgreSQL host** — using local Docker Postgres (`quickbasket-db`, postgres:16)
-- [ ] `[INFRA]` **Redis** — Upstash (or local Redis for dev) — not provisioned yet
-- [ ] `[INFRA]` **Cloudflare R2** — bucket for product images (needed Phase 2)
-- [ ] `[INFRA]` **Sentry** — project for API + mobile (needed Phase 5; create account now)
-- [ ] `[INFRA]` **Firebase / FCM** — push notification credentials (needed Phase 4)
+- [x] `[INFRA]` **GitHub** — repo exists (`shirbhateisha-ui/QuickBasket`)
+
+> Other third-party accounts are now created in the phase that first needs them, not here:
+> **Expo / EAS** → Phase 1 · **Redis + Cloudflare R2** → Phase 2 · **Firebase / FCM** → Phase 4 ·
+> **Sentry** (+ Apple Developer / Google Play) → Phase 5.
 
 ### Provision dev infrastructure
 
 - [x] `[INFRA]` Start **dev PostgreSQL**: Docker container up on `localhost:5432`, schema migrated + seeded
-- [ ] `[INFRA]` Provision **dev Redis**; capture `REDIS_URL` — not done yet
 - [x] `[INFRA]` Document connection strings in a local secrets file (not committed) — `apps/api/.env` (git-ignored)
+
+> Dev **Redis** provisioning moved to [Phase 2](./phase-2-catalog.md) (first used for caching).
 
 ### Repository hygiene
 
 - [x] `[INFRA]` Add `.nvmrc` with `24`
 - [x] `[INFRA]` Add root `.gitignore`: `node_modules/`, `.env*`, `dist/`, `build/`, `.expo/`, `.turbo/`, `.claude/`
-- [ ] `[INFRA]` Enable **branch protection** on `main`: require PR (+ passing CI once added in Phase 5)
 
 ---
 
@@ -58,9 +56,8 @@ Mark Phase 0 complete when **all** items are checked:
 
 - [x] Node 24 + pnpm work on your machine (`node -v`, `pnpm -v`) — Node v24.14.0, pnpm v11.8.0
 - [x] Dev Postgres is reachable (Docker running or hosted instance healthy)
-- [ ] Dev Redis is reachable — not provisioned
-- [ ] All third-party accounts exist; credentials stored outside the repo — GitHub + local Postgres only; Expo/Redis/R2/Sentry/FCM pending
-- [ ] `.nvmrc`, `.gitignore`, and branch protection are in place — `.nvmrc` ✓, `.gitignore` ✓, **branch protection pending**
+- [x] GitHub repo exists; credentials stored outside the repo
+- [x] `.nvmrc` and `.gitignore` are in place
 
 ---
 

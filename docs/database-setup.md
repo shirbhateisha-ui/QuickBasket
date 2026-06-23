@@ -122,7 +122,7 @@ Expected output:
 ```
 Seeding QuickBasket database...
 ✓ Users: customer 9999900001, staff 9999900002 (password: Password@123)
-✓ Catalog: 6 categories, 100+ products
+✓ Catalog: 6 categories, 107 products
 ✓ Coupons: WELCOME10, FRESH50, SAVE15
 ✓ Delivery slots: 28 across 7 days
 ✓ Promotions: 3 banners

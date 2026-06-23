@@ -22,63 +22,69 @@
 
 ## Tasks
 
+### Accounts (set up in this phase)
+
+- [x] `[INFRA]` **Expo / EAS** account created at `expo.dev`; logged in via `eas login` in terminal
+  - CLI installed (`npm i -g eas-cli`); Expo email/password stored in secrets manager
+  - (CI build token `EXPO_TOKEN` is generated later in Phase 5)
+
 ### Monorepo & shared tooling
 
-- [ ] `[INFRA]` Initialize Turborepo monorepo with pnpm workspaces:
+- [x] `[INFRA]` Initialize Turborepo monorepo with pnpm workspaces (`apps/*`, `packages/*`):
   ```
   quickbasket/
-  ├── apps/mobile/
-  ├── apps/api/
-  ├── packages/ui/
-  ├── packages/store/
-  ├── packages/types/
-  └── packages/utils/
+  ├── apps/api/          ✅ done
+  ├── apps/mobile/       ⏳ migration from QuickBasket/ pending (Stage 2)
+  ├── packages/ui/       ✅ placeholder
+  ├── packages/store/    ✅ authSlice
+  ├── packages/types/    ✅ done
+  └── packages/utils/    ✅ done
   ```
-- [ ] `[INFRA]` Root `package.json` with workspace scripts: `dev`, `build`, `lint`, `test`
-- [ ] `[INFRA]` `turbo.json` pipelines: `dev`, `build`, `lint`, `test`
-- [ ] `[INFRA]` Shared `tsconfig.base.json`; strict TypeScript in all packages
-- [ ] `[INFRA]` Shared ESLint + Prettier config consumed by apps/packages
-- [ ] `[INFRA]` `packages/types` — shared interfaces: `User`, `Address`, `AuthTokens`, `ApiError`
-- [ ] `[INFRA]` `packages/utils` — stubs: `formatPrice`, `slugify`, `dateHelpers`
+- [x] `[INFRA]` Root `package.json` with workspace scripts: `dev`, `build`, `lint`, `typecheck`, `test`
+- [x] `[INFRA]` `turbo.json` pipelines: `dev`, `build`, `lint`, `typecheck`, `test`
+- [x] `[INFRA]` Shared `tsconfig.base.json`; strict TypeScript in all packages
+- [ ] `[INFRA]` Shared ESLint + Prettier config consumed by apps/packages — **Prettier done; ESLint pending**
+- [x] `[INFRA]` `packages/types` — shared interfaces: `PublicUser`, `Address`, `AuthTokens`, `ApiError`, DTOs
+- [x] `[INFRA]` `packages/utils` — `formatPrice`, `discountPercent`, `slugify`, `dateHelpers`
 
 ### API — bootstrap
 
-- [ ] `[BE]` Scaffold `apps/api` with Fastify + TypeScript
-- [ ] `[BE]` Env validation with Zod:
-  - `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `PORT`, `NODE_ENV`
-- [ ] `[BE]` Pino structured logging
-- [ ] `[BE]` `GET /health` — returns `{ status: "ok" }`
-- [ ] `[BE]` CORS configured for mobile/web dev origins
-- [ ] `[BE]` Global error handler (consistent JSON error shape)
+- [x] `[BE]` Scaffold `apps/api` with Fastify + TypeScript
+- [x] `[BE]` Env validation with Zod:
+  - `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `PORT`, `NODE_ENV`, TTLs, CORS
+- [x] `[BE]` Pino structured logging (pino-pretty in dev)
+- [x] `[BE]` `GET /health` — returns `{ status: "ok", db }` (with DB ping)
+- [x] `[BE]` CORS configured for mobile/web dev origins
+- [x] `[BE]` Global error handler (consistent JSON error shape; Zod + AppError)
 
 ### API — database
 
-- [ ] `[BE]` Add `apps/api/package.json` with Prisma deps per [database-setup.md](../database-setup.md):
+- [x] `[BE]` Add `apps/api/package.json` with Prisma deps per [database-setup.md](../database-setup.md):
   - `@prisma/client`, `argon2`, `prisma`, `tsx`
-- [ ] `[BE]` Register Prisma seed + db scripts in `package.json`
-- [ ] `[BE]` Create `apps/api/.env` with `DATABASE_URL` (git-ignored)
-- [ ] `[BE]` Run `pnpm db:migrate --name init`
-- [ ] `[BE]` Run `pnpm db:seed` — verify test users in Prisma Studio
-- [ ] `[BE]` Prisma client singleton module (`lib/prisma.ts`)
+- [x] `[BE]` Register Prisma seed + db scripts in `package.json`
+- [x] `[BE]` Create `apps/api/.env` with `DATABASE_URL` (git-ignored)
+- [x] `[BE]` Run `pnpm db:migrate --name init`
+- [x] `[BE]` Run `pnpm db:seed` — verified test users via Prisma Studio
+- [x] `[BE]` Prisma client singleton module (`lib/prisma.ts`)
 
 ### API — authentication
 
-- [ ] `[BE]` Password module: `hashPassword`, `verifyPassword` (argon2)
-- [ ] `[BE]` JWT utilities:
-  - Sign/verify access token (short TTL, e.g. 15m)
-  - Sign/verify refresh token (longer TTL, e.g. 7d)
-  - Store **hashed** refresh tokens in `refresh_tokens` table
-  - Rotation on refresh; revoke old token
-- [ ] `[BE]` Auth middleware: validate access token, attach `userId` to request
-- [ ] `[BE]` `POST /auth/register` — body: `{ phone, name, password }`
-  - Reject duplicate phone (409)
-  - Return `{ accessToken, refreshToken, user }`
-- [ ] `[BE]` `POST /auth/login` — body: `{ phone, password }`
-  - Invalid credentials → 401
+- [x] `[BE]` Password module: `hashPassword`, `verifyPassword` (argon2)
+- [x] `[BE]` JWT utilities:
+  - Sign/verify access token (15m TTL)
+  - Opaque refresh token (7d), **hashed** in `refresh_tokens` table
+  - Rotation on refresh; old token revoked (verified: reuse → 401)
+- [x] `[BE]` Auth middleware: validate access token, attach `userId` to request
+- [x] `[BE]` `POST /auth/register` — body: `{ phone, name, password }`
+  - Reject duplicate phone (409) ✅
+  - Return `{ user, accessToken, refreshToken }`
+- [x] `[BE]` `POST /auth/login` — body: `{ phone, password }`
+  - Invalid credentials → 401 ✅
   - Return tokens + user
-- [ ] `[BE]` `POST /auth/refresh` — body: `{ refreshToken }`
-  - Rotate refresh token; return new pair
-- [ ] `[BE]` `POST /auth/logout` (optional) — revoke refresh token
+- [x] `[BE]` `POST /auth/refresh` — body: `{ refreshToken }`
+  - Rotate refresh token; return new pair ✅
+- [x] `[BE]` `POST /auth/logout` — revoke refresh token
+- [x] `[BE]` `GET /auth/me` — current user (Bearer-protected)
 
 ### Mobile — bootstrap
 

@@ -18,6 +18,15 @@
 
 ## Tasks
 
+### Accounts & infra (set up in this phase)
+
+- [ ] `[INFRA]` **Firebase / FCM** — create project + Android app for push:
+  - `console.firebase.google.com` → **Add project** `QuickBasket` (Analytics optional)
+  - **Add Android app** (package e.g. `com.bizsense.quickbasket`) → download `google-services.json`
+  - **Project Settings → Cloud Messaging** → ensure **FCM API (V1)** is enabled
+  - **Service accounts → Generate new private key** → upload the FCM V1 JSON to Expo push credentials
+  - (iOS push uses APNs via the Apple Developer account — set up in Phase 5)
+
 ### API — order state machine
 
 - [ ] `[BE]` `OrderStatus` transitions with guards:

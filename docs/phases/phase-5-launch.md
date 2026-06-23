@@ -34,6 +34,10 @@
 
 ### Observability
 
+- [ ] `[INFRA]` **Sentry account + projects** — sign up at `sentry.io` → create org → two projects:
+  - Node.js → `quickbasket-api` (capture **DSN** → `SENTRY_DSN`)
+  - React Native → `quickbasket-mobile` (capture its DSN)
+  - Generate a **Sentry auth token** for source-map uploads (`SENTRY_AUTH_TOKEN`)
 - [ ] `[INFRA]` Sentry on API (Pino integration + unhandled errors)
 - [ ] `[INFRA]` Sentry on mobile (Expo SDK)
 - [ ] `[INFRA]` Source maps uploaded for readable stack traces
