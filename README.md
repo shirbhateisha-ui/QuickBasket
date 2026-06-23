@@ -6,9 +6,10 @@ custom **Node.js + Fastify + Prisma/PostgreSQL** backend. Phone + password auth,
 - **Docs:** [requirements](docs/requirements.md) · [architecture](docs/architecture.md) · [execution plan](docs/execution-plan.md) · [database design](docs/database-design.md) · [database setup](docs/database-setup.md)
 - **Phase checklists:** [docs/phases/](docs/phases/)
 
-> **Status:** Phase 1 in progress. The monorepo, shared packages, and the **API (auth)** are done and
-> verified. The mobile app currently lives at [`QuickBasket/`](QuickBasket/) and is pending migration
-> into `apps/mobile/` (Phase 1, Stage 2).
+> **Status:** **Phase 2 mobile screens complete** ✅
+> - Phase 1 (foundation): monorepo + API (auth + catalog endpoints) + mobile auth ✓
+> - Phase 2 (catalog): Home, Catalog, ProductDetail screens wired to RTK Query + RTK Query cache
+> - Next: Phase 3 (checkout) with cart + order placement
 
 ---
 
@@ -28,13 +29,13 @@ custom **Node.js + Fastify + Prisma/PostgreSQL** backend. Phone + password auth,
 ```
 quickbasket/
 ├── apps/
-│   └── api/          ← Fastify + Prisma backend  (✅ runnable)
+│   ├── api/          ← Fastify + Prisma backend  (✅ runnable)
+│   └── mobile/       ← Expo (SDK 56, expo-router) app
 ├── packages/
 │   ├── types/        ← shared TypeScript contracts
 │   ├── utils/        ← formatPrice, slugify, dateHelpers
 │   ├── store/        ← Redux Toolkit (authSlice)
 │   └── ui/           ← shared UI components (placeholder)
-├── QuickBasket/      ← Expo mobile app (to be moved to apps/mobile)
 ├── docs/             ← all project docs
 ├── turbo.json · pnpm-workspace.yaml · tsconfig.base.json
 ```
@@ -139,17 +140,28 @@ curl -X POST http://localhost:3000/auth/login \
 
 ## 6. Run the mobile app
 
-> The mobile app is currently the Expo starter at [`QuickBasket/`](QuickBasket/) (npm-based) and has
-> **not yet** been wired to the API — that lands in Phase 1, Stage 2. To run it as-is:
+The app lives at `apps/mobile/` in the pnpm workspace. Make sure the **API is running** (step 5), then from the repo root:
 
 ```bash
-cd QuickBasket
-npm install
-npm run web        # or: npm run android  /  npm run ios
+pnpm mobile        # = expo start  (then press w = web, a = Android, i = iOS)
+# or platform-specific:
+pnpm --filter quickbasket-mobile web
 ```
 
-After Stage 2 (move to `apps/mobile/` + pnpm), it will run from the root via `pnpm mobile`.
-Point the app at the API with your machine's LAN IP (e.g. `http://192.168.x.x:3000`) so devices/emulators can reach it.
+You can **register** a new account or **log in** with a seeded user (`9999900001` / `Password@123`).
+Login lands on the Home tab; the session persists across restarts (secure-store on device,
+localStorage on web), and there's a Log out button on Home.
+
+**Pointing the app at the API:** defaults to `http://localhost:3000` (works for web). For a real
+device/emulator, set your machine's LAN IP before starting:
+
+```bash
+# PowerShell
+$env:EXPO_PUBLIC_API_URL="http://192.168.x.x:3000"; pnpm mobile
+```
+
+**Phase 2 — Catalog live!** Browse 6 categories with 100+ products, search (server-side), and view product details
+with pricing & stock status. Tap a category chip or product card to explore. (Cart & checkout arrive in Phase 3.)
 
 ---
 

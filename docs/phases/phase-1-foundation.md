@@ -88,33 +88,29 @@
 
 ### Mobile — bootstrap
 
-- [ ] `[MOB]` Init Expo Bare workflow in `apps/mobile`
-- [ ] `[MOB]` NativeWind v4 + Tailwind config; theme constants (colors, spacing)
-- [ ] `[MOB]` Install: `expo-secure-store`, `expo-image`, `@react-navigation/native` v7
-- [ ] `[MOB]` Wire `packages/store` and `packages/types` into mobile
+- [x] `[MOB]` Expo app migrated into `apps/mobile` (managed workflow, **expo-router**, not Bare)
+- [~] `[MOB]` ~~NativeWind v4~~ — using stock Expo styling (themed components + `theme.ts`); NativeWind deferred
+- [x] `[MOB]` Install: `expo-secure-store` ✓, `expo-image` ✓ (pre-installed); navigation = **expo-router** (not React Navigation)
+- [x] `[MOB]` Wire `packages/store` and `packages/types` into mobile
 
 ### Mobile — navigation & auth UI
 
-- [ ] `[MOB]` **Auth Stack:** Splash → Onboarding (optional) → Login → Register
-- [ ] `[MOB]` **Main Tabs** (5 stubbed): Home, Catalog, Cart, Orders, Profile
-- [ ] `[MOB]` Redux store in `packages/store`:
-  - `authSlice`: `userId`, `accessToken`, `isLoggedIn`
-  - Tokens in `expo-secure-store` (not AsyncStorage)
-- [ ] `[MOB]` RTK Query `authApi` or fetch wrapper with auth header injection
-- [ ] `[MOB]` **Register screen:** phone, name, password, confirm password
-  - Client validation (phone format, password strength, match)
-  - Call `POST /auth/register` → navigate to Home
-- [ ] `[MOB]` **Login screen:** phone + password, show/hide toggle
-  - Call `POST /auth/login` → navigate to Home
-- [ ] `[MOB]` **Auth gate:** on app launch, read token → Main Tabs or Auth Stack
-- [ ] `[MOB]` **Silent refresh:** if access expired, call `POST /auth/refresh` before routing
-- [ ] `[MOB]` **Logout** on Profile stub → clear tokens → Login
+- [x] `[MOB]` **Auth group `(auth)`:** Login + Register (Splash = `AnimatedSplashOverlay` + hydration gate; Onboarding skipped)
+- [~] `[MOB]` **Tabs `(tabs)`:** Home + Explore stubbed; Catalog/Cart/Orders/Profile tabs added as those phases land
+- [x] `[MOB]` Redux store (`@quickbasket/store` `authSlice`) configured in app; tokens in `expo-secure-store` (web → localStorage fallback)
+- [x] `[MOB]` Fetch wrapper (`lib/api.ts`) with auth header injection
+- [x] `[MOB]` **Register screen:** name, phone, password, confirm + client validation → `POST /auth/register`
+- [x] `[MOB]` **Login screen:** phone + password → `POST /auth/login`
+- [x] `[MOB]` **Auth gate:** `Stack.Protected` guards `(tabs)` vs `(auth)`; session hydrated from storage on launch
+- [x] `[MOB]` **Silent refresh:** `lib/api.ts` retries once via `POST /auth/refresh` on 401
+- [x] `[MOB]` **Logout** on Home → clears tokens → returns to Login
 
 ### Verification
 
-- [ ] `[QA]` Manual: register new user on Web
-- [ ] `[QA]` Manual: login with seeded user `9999900001` / `Password@123`
-- [ ] `[QA]` Manual: kill app, relaunch — still logged in
+- [x] `[QA]` Mobile typecheck passes; **web bundle builds** (Metro, 1201 modules, all routes resolve)
+- [ ] `[QA]` Manual: register new user on Web (`pnpm mobile` → `w`) — **needs your run**
+- [ ] `[QA]` Manual: login with seeded user `9999900001` / `Password@123` — **needs your run**
+- [ ] `[QA]` Manual: kill app, relaunch — still logged in — **needs your run**
 - [ ] `[QA]` Manual: repeat on Android emulator + iOS simulator if available
 
 ---
